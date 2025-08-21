@@ -1,0 +1,386 @@
+#include <iostream>
+using namespace std;
+
+int size_alloc = 0;
+int count = 1;
+int totalsize;
+struct node *head;
+
+struct node
+{
+    int p_no;
+    int size;
+    int start_add;
+    struct node *next;
+};
+void allocation_worstfit(struct node *&head)
+{
+    NEW:
+    struct node *newnode;
+    newnode = (struct node*)malloc(sizeof(struct node));
+    cout<<"enter the size: ";
+    cin>>newnode->size;
+    size_alloc += newnode->size;
+    if(size_alloc > totalsize){
+        cout<<"enter valid size"<<endl;
+        size_alloc -= newnode->size;
+        goto NEW;
+    }
+    struct node *current, *prev;
+    current = head;
+    prev = head;
+    int address = 0;
+    int diff = INT8_MIN;
+    while(current != NULL)
+    {
+        if(current->p_no==0 && current->size >=newnode->size)
+        { 
+            int diff1 = current->size - newnode->size;
+            if(diff1>diff)
+            {
+                diff = diff1;
+                address = current->start_add;
+            }
+        }
+        current = current->next;
+
+    }
+    current = head;
+    while(current)
+    {
+        if(current->start_add == address && current==head && diff !=0)
+        {
+            newnode->p_no = count;
+            count++;
+            newnode->start_add = 0;
+            newnode->next = current;
+            current->start_add = newnode->size;
+            current->size -= newnode->size;
+            head = newnode;
+            break;
+        }
+        else if(current->start_add == address && diff !=0)
+        {
+            prev->next = newnode;
+            newnode->p_no = count;
+            count++;
+            newnode->start_add = current->start_add;
+            newnode->next = current;
+            current->size -= newnode->size;
+            current->start_add = newnode->start_add+newnode->size;
+            prev = prev->next;
+            break;
+        }
+        else if(current->start_add == address && diff==0)
+        {
+            current->p_no = count;
+            count++;
+            break;
+        }
+        prev = current;
+        current = current->next;
+    }
+
+}
+void allocation_bestfit(struct node *&head)
+{
+    NEW:
+    struct node *newnode;
+    newnode = (struct node*)malloc(sizeof(struct node));
+    cout<<"enter the size: ";
+    cin>>newnode->size;
+    size_alloc += newnode->size;
+    if(size_alloc > totalsize){
+        cout<<"enter valid size"<<endl;
+        size_alloc -= newnode->size;
+        goto NEW;
+    }
+    struct node *current, *prev;
+    current = head;
+    prev = head;
+    int address = 0;
+    int diff = INT8_MAX;
+    while(current != NULL)
+    {
+        if(current->p_no==0 && current->size >=newnode->size)
+        { 
+            int diff1 = current->size - newnode->size;
+            if(diff1<diff)
+            {
+                diff = diff1;
+                address = current->start_add;
+            }
+        }
+        current = current->next;
+
+    }
+    current = head;
+    while(current)
+    {
+        if(current->start_add == address && current==head && diff !=0)
+        {
+            newnode->p_no = count;
+            count++;
+            newnode->start_add = 0;
+            newnode->next = current;
+            current->start_add = newnode->size;
+            current->size -= newnode->size;
+            head = newnode;
+            break;
+        }
+        else if(current->start_add == address && diff !=0)
+        {
+            prev->next = newnode;
+            newnode->p_no = count;
+            count++;
+            newnode->start_add = current->start_add;
+            newnode->next = current;
+            current->size -= newnode->size;
+            current->start_add = newnode->start_add+newnode->size;
+            prev = prev->next;
+            break;
+        }
+        else if(current->start_add == address && diff==0)
+        {
+            current->p_no = count;
+            count++;
+            break;
+        }
+        prev = current;
+        current = current->next;
+    }
+
+}
+void allocation_firstfit(struct node *&head)
+{
+    NEW:
+    struct node *newnode;
+    newnode = (struct node*)malloc(sizeof(struct node));
+    cout<<"enter the size: ";
+    cin>>newnode->size;
+    size_alloc += newnode->size;
+    if(size_alloc > totalsize){
+        cout<<"enter valid size"<<endl;
+        size_alloc -= newnode->size;
+        goto NEW;
+    }
+    struct node *current, *prev;
+    current = head;
+    prev = head;
+    while(current != NULL)
+    {
+        if(current->p_no == 0 && current==head && current->size > newnode->size)
+        {
+            newnode->p_no = count;
+            count++;
+            newnode->start_add = 0;
+            newnode->next = current;
+            current->start_add = newnode->size;
+            current->size -= newnode->size;
+            head = newnode;
+            break;
+        }
+        else if(current->p_no == 0 && current->size > newnode->size)
+        {
+            prev->next = newnode;
+            newnode->p_no = count;
+            count++;
+            newnode->start_add = current->start_add;
+            newnode->next = current;
+            current->size -= newnode->size;
+            current->start_add = newnode->start_add+newnode->size;
+            prev = prev->next;
+            break;
+        }
+        else if(current->p_no == 0 && current->size == newnode->size)
+        {
+            current->p_no = count;
+            count++;
+            break;
+        }
+        prev = current;
+        current = current->next;
+    }
+    
+}
+void deallocation(struct node *&head, int number)
+{
+    struct node * current, *prev;
+    current = head;
+    prev = current;
+    while(current != NULL)
+    {
+        if(current->p_no == number)
+        {
+            current->p_no = 0;
+            size_alloc -= current->size;
+            if(current->next->p_no == 0)
+            {
+                current->size += current->next->size;
+                current->next = current->next->next;
+            }
+            if(prev->p_no == 0 && prev != current)
+            {
+                prev->size += current->size;
+                prev->next = current->next;
+                free(current);
+            }
+            break;
+
+        }
+        prev = current;
+        current = current->next;
+    }
+}
+void compaction(struct node *&head)
+{
+    struct node *current, *prev;
+    current = head;
+    prev = head;
+    int free = 0;
+    if(current->next == NULL){
+        cout<<"memory already compacted";
+        return;
+    }
+    while(current->next != NULL)
+    {
+        
+        if(current->p_no == 0)
+        {
+            if(current==head)
+            {
+                free+=current->size;
+                current = current->next;
+                head = current;
+                current->start_add = 0;
+                current->next->start_add = current->start_add+current->size;
+                prev = current;
+                current = current->next;
+                continue;
+            }
+            else{
+            free += current->size;
+            current->next->start_add = current->start_add;
+            prev->next = current->next;
+            current = current->next;
+            continue;
+            }
+        }
+        current->start_add = prev->size+prev->start_add;
+        prev = current;
+        current = current->next;
+    }
+    if(free==0){
+        cout<<"memory already compacted";
+        return;
+    }
+    if(current->p_no == 0)
+    {
+        current->start_add = prev->start_add+prev->size;
+        current->size = free+current->size;
+    }
+    else
+    {
+        struct node  *newnode;
+        newnode = (struct node*)malloc(sizeof(struct node));
+        newnode->p_no = 0;
+        newnode->size = free;
+        current->next = newnode;
+        newnode->start_add = current->size+current->start_add;
+        newnode->next = NULL;
+    }
+}
+void displayLL(struct node *head)
+{
+    //display LL
+    struct node *current1 = head;
+    while (current1 != NULL)
+    {
+        cout<<"("<<current1->p_no<<", "<<current1->size<<", "<<current1->start_add<<")"<<"-->";
+        current1 = current1->next;
+    }
+    cout<<"NULL"<<endl;
+}
+
+int main()
+{
+    struct node *newnode, *current;
+    head = 0;
+    cout<<"enter total size of the memory: ";
+    cin>>totalsize;
+    int choice;
+    while (choice && size_alloc != totalsize)
+    {
+        newnode = (struct node*)malloc(sizeof(struct node));
+        cout<<"enter size: ";
+        cin>> newnode->size;
+        newnode->start_add = size_alloc;
+        size_alloc += newnode->size;
+        if(size_alloc > totalsize){
+            cout<<"enter valid size"<<endl;
+            size_alloc -= newnode->size;
+            continue;
+        }
+        newnode->p_no = count;
+        count++;
+        newnode->next = 0;
+        if(head==0)
+        {head = current = newnode;}
+        else
+        {
+            current->next=newnode;
+            current = newnode;
+        }
+
+        cout<<"do you want to add another process? (0/1): ";
+        cin>>choice;
+    }
+
+    if(size_alloc != totalsize)
+    {
+        newnode = (struct node*)malloc(sizeof(struct node));
+        newnode->p_no = 0;
+        newnode->size = totalsize - size_alloc;
+        newnode->start_add = size_alloc;
+        newnode->next = 0;
+        current->next=newnode;
+        current = newnode;
+    }
+    int choice1;
+    while(choice1 != 7)
+    {
+        cout<<"enter choice (1.allocation_firstfit, 2.allocatioon_bestfit, 3.allocation_worstfit, 4.deallocation, 5.compaction, 6.display LL, 7. exit)"<<endl;
+        cin>>choice1;
+        switch (choice1)
+        {
+        case 1:
+            allocation_firstfit(head);
+            displayLL(head);
+            break;
+        case 2:
+            allocation_bestfit(head);
+            displayLL(head);
+            break;
+        case 3:
+            allocation_worstfit(head);
+            displayLL(head);
+            break;
+        case 4:
+            int number;
+            cout<<"enter the program number to be deallocated: ";
+            cin>>number;
+            deallocation(head, number);
+            displayLL(head);
+            break;
+        case 5:
+            compaction(head);
+            displayLL(head);
+            break;
+        case 6:
+            displayLL(head);
+            break;
+        default:
+            break;
+        }
+    }
+}
